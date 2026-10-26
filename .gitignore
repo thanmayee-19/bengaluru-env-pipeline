@@ -1,3 +1,23 @@
+# Maven build output
+target/
+
+# IDE files
+.settings/
+.classpath
+.project
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
 # Compiled class file
 *.class
 

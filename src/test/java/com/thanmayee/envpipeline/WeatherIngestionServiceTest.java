@@ -1,9 +1,9 @@
 package com.thanmayee.envpipeline;
 
-import com.example.readingservice.entity.Reading;
-import com.example.readingservice.repository.ReadingRepository;
-import com.example.readingservice.service.WeatherIngestionService;
-import com.example.readingservice.source.DataSource;
+import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.repository.ReadingRepository;
+import com.thanmayee.envpipeline.service.WeatherIngestionService;
+import com.thanmayee.envpipeline.source.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

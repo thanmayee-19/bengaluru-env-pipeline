@@ -1,9 +1,10 @@
-package com.example.readingservice.controller;
+package com.thanmayee.envpipeline.controller;
 
-import com.example.readingservice.service.WeatherIngestionService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.thanmayee.envpipeline.service.WeatherIngestionService;
 
 @RestController
 @RequestMapping("/api/weather")

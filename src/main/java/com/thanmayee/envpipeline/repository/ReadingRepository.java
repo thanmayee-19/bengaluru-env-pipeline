@@ -1,8 +1,10 @@
 
-package com.example.readingservice.repository;
+package com.thanmayee.envpipeline.repository;
 
-import com.example.readingservice.entity.Reading;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.thanmayee.envpipeline.entity.Reading;
+
 import java.time.Instant;
 
 public interface ReadingRepository

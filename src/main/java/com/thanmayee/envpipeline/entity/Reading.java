@@ -1,4 +1,4 @@
-package com.example.readingservice.entity;
+package com.thanmayee.envpipeline.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;

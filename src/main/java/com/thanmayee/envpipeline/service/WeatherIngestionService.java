@@ -1,8 +1,8 @@
-package com.example.readingservice.service;
+package com.thanmayee.envpipeline.service;
 
-import com.example.readingservice.entity.Reading;
-import com.example.readingservice.repository.ReadingRepository;
-import com.example.readingservice.source.DataSource;
+import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.repository.ReadingRepository;
+import com.thanmayee.envpipeline.source.DataSource;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

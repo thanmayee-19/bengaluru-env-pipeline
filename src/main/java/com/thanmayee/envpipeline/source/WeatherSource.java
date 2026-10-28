@@ -1,9 +1,9 @@
-package com.example.readingservice.source;
+package com.thanmayee.envpipeline.source;
 
-import com.example.readingservice.dto.Hourly;
-import com.example.readingservice.dto.WeatherApiResponse;
-import com.example.readingservice.entity.Reading;
-import com.example.readingservice.model.Area;
+import com.thanmayee.envpipeline.dto.Hourly;
+import com.thanmayee.envpipeline.dto.WeatherApiResponse;
+import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.model.Area;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;

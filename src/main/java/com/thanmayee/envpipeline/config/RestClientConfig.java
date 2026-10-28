@@ -1,4 +1,4 @@
-package com.example.readingservice.config;
+package com.thanmayee.envpipeline.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,8 +1,10 @@
-package com.example.readingservice.controller;
+package com.thanmayee.envpipeline.controller;
 
-import com.example.readingservice.repository.ReadingRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.thanmayee.envpipeline.repository.ReadingRepository;
+
 import java.util.Map;
 
 @RestController

@@ -1,4 +1,4 @@
-package com.example.readingservice.dto;
+package com.thanmayee.envpipeline.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

@@ -1,5 +1,5 @@
 
-package com.example.readingservice.model;
+package com.thanmayee.envpipeline.model;
 
 public enum Area {
 

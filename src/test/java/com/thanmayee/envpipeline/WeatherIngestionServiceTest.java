@@ -1,4 +1,4 @@
-package com.example.reading_service;
+package com.thanmayee.envpipeline;
 
 import com.example.readingservice.entity.Reading;
 import com.example.readingservice.repository.ReadingRepository;

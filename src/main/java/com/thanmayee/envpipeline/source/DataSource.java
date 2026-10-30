@@ -1,9 +1,13 @@
 package com.thanmayee.envpipeline.source;
 
+import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.model.Area;
+
 import java.util.List;
 
-import com.thanmayee.envpipeline.entity.Reading;
-
 public interface DataSource {
-    List<Reading> fetchReadings();
+
+    String name();
+
+    List<Reading> fetch(Area area);
 }

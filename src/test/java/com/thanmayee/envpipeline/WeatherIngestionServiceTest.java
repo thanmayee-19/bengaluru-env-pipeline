@@ -1,9 +1,11 @@
 package com.thanmayee.envpipeline;
 
 import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.model.Area;
 import com.thanmayee.envpipeline.repository.ReadingRepository;
 import com.thanmayee.envpipeline.service.WeatherIngestionService;
 import com.thanmayee.envpipeline.source.DataSource;
+import com.thanmayee.envpipeline.pipeline.Pipeline;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,20 +14,32 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
-
-public class WeatherIngestionServiceTest {
+class WeatherIngestionServiceTest {
 
     private DataSource dataSource;
     private ReadingRepository repository;
     private WeatherIngestionService service;
+    private Pipeline pipeline;
 
     @BeforeEach
     void setUp() {
         dataSource = mock(DataSource.class);
         repository = mock(ReadingRepository.class);
-        service = new WeatherIngestionService(dataSource, repository);
+        pipeline = mock(Pipeline.class);
+
+        // Pass the list through the mocked pipeline unchanged.
+        when(pipeline.process(anyList()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        service = new WeatherIngestionService(
+                List.of(dataSource),
+                repository,
+                pipeline
+        );
     }
 
     private Reading createReading() {
@@ -43,7 +57,9 @@ public class WeatherIngestionServiceTest {
     void insertsNewReading() {
         Reading reading = createReading();
 
-        when(dataSource.fetchReadings()).thenReturn(List.of(reading));
+        when(dataSource.fetch(Area.KORAMANGALA))
+                .thenReturn(List.of(reading));
+
         when(repository.existsByAreaAndMetricAndRecordedAt(
                 reading.getArea(),
                 reading.getMetric(),
@@ -60,7 +76,9 @@ public class WeatherIngestionServiceTest {
     void skipsDuplicateReading() {
         Reading reading = createReading();
 
-        when(dataSource.fetchReadings()).thenReturn(List.of(reading));
+        when(dataSource.fetch(Area.KORAMANGALA))
+                .thenReturn(List.of(reading));
+
         when(repository.existsByAreaAndMetricAndRecordedAt(
                 reading.getArea(),
                 reading.getMetric(),
@@ -75,7 +93,8 @@ public class WeatherIngestionServiceTest {
 
     @Test
     void handlesEmptyReadings() {
-        when(dataSource.fetchReadings()).thenReturn(List.of());
+        when(dataSource.fetch(any(Area.class)))
+                .thenReturn(List.of());
 
         int inserted = service.ingest();
 

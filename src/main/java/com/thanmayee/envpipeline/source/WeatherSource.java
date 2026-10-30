@@ -18,7 +18,7 @@ import java.util.List;
 public class WeatherSource implements DataSource {
 
     private static final String API_URL =
-        "https://api.open-meteo.com/v1/forecast";
+            "https://api.open-meteo.com/v1/forecast";
 
     private static final String TIMEZONE = "Asia/Kolkata";
 
@@ -29,58 +29,61 @@ public class WeatherSource implements DataSource {
     }
 
     @Override
-    public List<Reading> fetchReadings() {
+    public String name() {
+        return "open-meteo-weather";
+    }
+
+    @Override
+    public List<Reading> fetch(Area area) {
         List<Reading> readings = new ArrayList<>();
 
-        for (Area area : Area.values()) {
-            WeatherApiResponse response = restClient.get()
+        WeatherApiResponse response = restClient.get()
                 .uri(API_URL + "?latitude=" + area.getLatitude()
-                    + "&longitude=" + area.getLongitude()
-                    + "&hourly=temperature_2m"
-                    + "&timezone=" + TIMEZONE)
+                        + "&longitude=" + area.getLongitude()
+                        + "&hourly=temperature_2m"
+                        + "&timezone=" + TIMEZONE)
                 .retrieve()
                 .body(WeatherApiResponse.class);
 
-            if (response == null || response.getHourly() == null) {
-                continue;
-            }
+        if (response == null || response.getHourly() == null) {
+            return readings;
+        }
 
-            Hourly hourly = response.getHourly();
+        Hourly hourly = response.getHourly();
 
-            if (hourly.getTime() == null
-                    || hourly.getTemperature2m() == null) {
-                continue;
-            }
+        if (hourly.getTime() == null
+                || hourly.getTemperature2m() == null) {
+            return readings;
+        }
 
-            int count = Math.min(
+        int count = Math.min(
                 hourly.getTime().size(),
                 hourly.getTemperature2m().size()
-            );
+        );
 
-            for (int i = 0; i < count; i++) {
-                Double temperature = hourly.getTemperature2m().get(i);
+        for (int i = 0; i < count; i++) {
+            Double temperature = hourly.getTemperature2m().get(i);
 
-                if (temperature == null) {
-                    continue;
-                }
+            if (temperature == null) {
+                continue;
+            }
 
-                LocalDateTime localTime =
+            LocalDateTime localTime =
                     LocalDateTime.parse(hourly.getTime().get(i));
 
-                Instant observedAt = localTime
+            Instant observedAt = localTime
                     .atZone(ZoneId.of(TIMEZONE))
                     .toInstant();
 
-                Reading reading = new Reading();
-                reading.setArea(area.name());
-                reading.setMetric("temperature_2m");
-                reading.setValue(temperature);
-                reading.setUnit("C");
-                reading.setSource("open-meteo-weather");
-                reading.setRecordedAt(observedAt);
+            Reading reading = new Reading();
+            reading.setArea(area.name());
+            reading.setMetric("temperature_2m");
+            reading.setValue(temperature);
+            reading.setUnit("C");
+            reading.setSource(name());
+            reading.setRecordedAt(observedAt);
 
-                readings.add(reading);
-            }
+            readings.add(reading);
         }
 
         return readings;

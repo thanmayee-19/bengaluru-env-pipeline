@@ -1,43 +1,79 @@
 package com.thanmayee.envpipeline.service;
 
 import com.thanmayee.envpipeline.entity.Reading;
+import com.thanmayee.envpipeline.model.Area;
+import com.thanmayee.envpipeline.pipeline.Pipeline;
 import com.thanmayee.envpipeline.repository.ReadingRepository;
 import com.thanmayee.envpipeline.source.DataSource;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class WeatherIngestionService {
 
-    private final DataSource dataSource;
+    private final List<DataSource> dataSources;
     private final ReadingRepository repository;
+    private final Pipeline pipeline;
 
     public WeatherIngestionService(
-            DataSource dataSource,
-            ReadingRepository repository) {
-        this.dataSource = dataSource;
+            List<DataSource> dataSources,
+            ReadingRepository repository,
+            Pipeline pipeline) {
+
+        this.dataSources = dataSources;
         this.repository = repository;
+        this.pipeline = pipeline;
     }
 
-    @Transactional
     public int ingest() {
-        List<Reading> readings = dataSource.fetchReadings();
         int inserted = 0;
 
-        for (Reading reading : readings) {
-            boolean exists = repository
-                .existsByAreaAndMetricAndRecordedAt(
-                    reading.getArea(),
-                    reading.getMetric(),
-                    reading.getRecordedAt()
-                );
+        for (DataSource dataSource : dataSources) {
+            for (Area area : Area.values()) {
 
-            if (!exists) {
-                repository.save(reading);
-                inserted++;
+                try {
+                    List<Reading> readings = dataSource.fetch(area);
+
+                    if (readings == null || readings.isEmpty()) {
+                        continue;
+                    }
+
+                    List<Reading> results = pipeline.process(readings);
+
+                    if (results == null || results.isEmpty()) {
+                        continue;
+                    }
+
+                    for (Reading result : results) {
+                        if (result == null) {
+                            continue;
+                        }
+
+                        boolean exists =
+                                repository.existsByAreaAndMetricAndRecordedAt(
+                                        result.getArea(),
+                                        result.getMetric(),
+                                        result.getRecordedAt()
+                                );
+
+                        if (!exists) {
+                            repository.save(result);
+                            inserted++;
+                        }
+                    }
+
+                } catch (Exception e) {
+                    System.err.println(
+                            "Ingestion failed for source "
+                                    + dataSource.name()
+                                    + ", area "
+                                    + area.name()
+                                    + ": "
+                                    + e.getMessage()
+                    );
+                }
             }
         }
 

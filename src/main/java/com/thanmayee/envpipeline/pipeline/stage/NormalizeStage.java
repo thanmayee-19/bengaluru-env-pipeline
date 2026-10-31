@@ -16,12 +16,15 @@ public class NormalizeStage implements PipelineStage {
         }
 
         for (Reading reading : readings) {
+
             if (reading == null) {
                 continue;
             }
 
             if (reading.getArea() != null) {
-                reading.setArea(reading.getArea().trim());
+                reading.setArea(
+                    reading.getArea().trim().toUpperCase(Locale.ROOT)
+                );
             }
 
             if (reading.getMetric() != null) {

@@ -33,6 +33,9 @@ public class Reading {
 
     @Column(name = "recorded_at", nullable = false)
     private Instant recordedAt;
+    
+    @Transient
+    private String pm25Category;
 
     public Reading() {
     }
@@ -87,5 +90,13 @@ public class Reading {
 
     public void setRecordedAt(Instant recordedAt) {
         this.recordedAt = recordedAt;
+    }
+    
+    public String getPm25Category() {
+        return pm25Category;
+    }
+
+    public void setPm25Category(String pm25Category) {
+        this.pm25Category = pm25Category;
     }
 }

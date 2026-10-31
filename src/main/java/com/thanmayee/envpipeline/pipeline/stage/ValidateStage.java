@@ -3,6 +3,7 @@ package com.thanmayee.envpipeline.pipeline.stage;
 import com.thanmayee.envpipeline.entity.Reading;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ValidateStage implements PipelineStage {
 
@@ -15,6 +16,7 @@ public class ValidateStage implements PipelineStage {
         }
 
         for (Reading reading : readings) {
+
             if (reading == null
                     || reading.getArea() == null
                     || reading.getArea().isBlank()
@@ -27,7 +29,10 @@ public class ValidateStage implements PipelineStage {
             }
 
             double value = reading.getValue();
-            String metric = reading.getMetric().trim().toLowerCase();
+
+            String metric = reading.getMetric()
+                    .trim()
+                    .toLowerCase(Locale.ROOT);
 
             if (metric.equals("pm2_5") && value < 0) {
                 continue;

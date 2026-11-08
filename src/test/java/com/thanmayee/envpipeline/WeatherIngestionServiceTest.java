@@ -6,12 +6,16 @@ import com.thanmayee.envpipeline.repository.ReadingRepository;
 import com.thanmayee.envpipeline.service.WeatherIngestionService;
 import com.thanmayee.envpipeline.source.DataSource;
 import com.thanmayee.envpipeline.pipeline.Pipeline;
+import com.thanmayee.envpipeline.service.RetryExecutor;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,12 +28,17 @@ class WeatherIngestionServiceTest {
     private ReadingRepository repository;
     private WeatherIngestionService service;
     private Pipeline pipeline;
+    private ExecutorService executor;
+    private RetryExecutor retryExecutor;
 
     @BeforeEach
     void setUp() {
         dataSource = mock(DataSource.class);
         repository = mock(ReadingRepository.class);
         pipeline = mock(Pipeline.class);
+        retryExecutor = new RetryExecutor();
+
+        executor = Executors.newFixedThreadPool(6);
 
         when(pipeline.process(anyList()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -37,8 +46,15 @@ class WeatherIngestionServiceTest {
         service = new WeatherIngestionService(
                 List.of(dataSource),
                 repository,
-                pipeline
+                pipeline,
+                executor,
+                retryExecutor
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        executor.shutdownNow();
     }
 
     private Reading createReading(String area, String metric) {
@@ -152,7 +168,9 @@ class WeatherIngestionServiceTest {
                 new WeatherIngestionService(
                         List.of(failingSource, workingSource),
                         repository,
-                        pipeline
+                        pipeline,
+                        executor,
+                        retryExecutor
                 );
 
         int inserted = multiSourceService.ingest();

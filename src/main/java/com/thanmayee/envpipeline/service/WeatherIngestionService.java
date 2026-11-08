@@ -6,76 +6,152 @@ import com.thanmayee.envpipeline.pipeline.Pipeline;
 import com.thanmayee.envpipeline.repository.ReadingRepository;
 import com.thanmayee.envpipeline.source.DataSource;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Service
 public class WeatherIngestionService {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(WeatherIngestionService.class);
+
     private final List<DataSource> dataSources;
     private final ReadingRepository repository;
     private final Pipeline pipeline;
+    private final ExecutorService ingestionExecutor;
+    private final RetryExecutor retryExecutor;
 
     public WeatherIngestionService(
             List<DataSource> dataSources,
             ReadingRepository repository,
-            Pipeline pipeline) {
+            Pipeline pipeline,
+            @Qualifier("ingestionExecutor") ExecutorService ingestionExecutor,
+            RetryExecutor retryExecutor) {
 
         this.dataSources = dataSources;
         this.repository = repository;
         this.pipeline = pipeline;
+        this.ingestionExecutor = ingestionExecutor;
+        this.retryExecutor = retryExecutor;
     }
 
     public int ingest() {
-        int inserted = 0;
+
+        List<CompletableFuture<List<Reading>>> futures =
+                new ArrayList<>();
 
         for (DataSource dataSource : dataSources) {
             for (Area area : Area.values()) {
 
-                try {
-                    List<Reading> readings = dataSource.fetch(area);
+                CompletableFuture<List<Reading>> future =
+                        CompletableFuture.supplyAsync(() -> {
 
-                    if (readings == null || readings.isEmpty()) {
-                        continue;
-                    }
+                            long startTime = System.nanoTime();
 
-                    List<Reading> results = pipeline.process(readings);
-
-                    if (results == null || results.isEmpty()) {
-                        continue;
-                    }
-
-                    for (Reading result : results) {
-                        if (result == null) {
-                            continue;
-                        }
-
-                        boolean exists =
-                                repository.existsByAreaAndMetricAndRecordedAt(
-                                        result.getArea(),
-                                        result.getMetric(),
-                                        result.getRecordedAt()
+                            try {
+                                logger.info(
+                                        "Started ingestion: source={}, area={}",
+                                        dataSource.name(), area.name()
                                 );
 
-                        if (!exists) {
-                            repository.save(result);
-                            inserted++;
-                        }
-                    }
+                                List<Reading> readings =
+                                        retryExecutor.execute(
+                                                () -> dataSource.fetch(area),
+                                                dataSource.name(),
+                                                area.name()
+                                        );
 
-                } catch (Exception e) {
-                    System.err.println(
-                            "Ingestion failed for source "
-                                    + dataSource.name()
-                                    + ", area "
-                                    + area.name()
-                                    + ": "
-                                    + e.getMessage()
-                    );
-                }
+                                long elapsedTime =
+                                        (System.nanoTime() - startTime)
+                                                / 1_000_000;
+
+                                int count = readings == null
+                                        ? 0 : readings.size();
+
+                                logger.info(
+                                        "Ingestion successful: source={}, area={}, readings={}, elapsed={} ms",
+                                        dataSource.name(),
+                                        area.name(),
+                                        count,
+                                        elapsedTime
+                                );
+
+                                return readings == null
+                                        ? List.<Reading>of()
+                                        : readings;
+
+                            } catch (Exception e) {
+
+                                long elapsedTime =
+                                        (System.nanoTime() - startTime)
+                                                / 1_000_000;
+
+                                logger.error(
+                                        "Ingestion failed: source={}, area={}, elapsed={} ms, reason={}",
+                                        dataSource.name(),
+                                        area.name(),
+                                        elapsedTime,
+                                        e.getMessage()
+                                );
+
+                                return List.<Reading>of();
+                            }
+
+                        }, ingestionExecutor);
+
+                futures.add(future);
             }
         }
+
+        CompletableFuture.allOf(
+                futures.toArray(new CompletableFuture[0])
+        ).join();
+
+        List<Reading> allReadings = new ArrayList<>();
+
+        for (CompletableFuture<List<Reading>> future : futures) {
+            allReadings.addAll(future.join());
+        }
+
+        List<Reading> results = pipeline.process(allReadings);
+
+        if (results == null || results.isEmpty()) {
+            logger.info("No valid readings available for saving.");
+            return 0;
+        }
+
+        int inserted = 0;
+
+        for (Reading result : results) {
+
+            if (result == null) {
+                continue;
+            }
+
+            boolean exists =
+                    repository.existsByAreaAndMetricAndRecordedAt(
+                            result.getArea(),
+                            result.getMetric(),
+                            result.getRecordedAt()
+                    );
+
+            if (!exists) {
+                repository.save(result);
+                inserted++;
+            }
+        }
+
+        logger.info(
+                "Concurrent ingestion completed. New readings inserted: {}",
+                inserted
+        );
 
         return inserted;
     }

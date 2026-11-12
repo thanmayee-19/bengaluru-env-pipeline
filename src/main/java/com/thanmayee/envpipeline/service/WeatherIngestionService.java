@@ -1,5 +1,6 @@
 package com.thanmayee.envpipeline.service;
 
+import com.thanmayee.envpipeline.cache.LRUCache;
 import com.thanmayee.envpipeline.entity.Reading;
 import com.thanmayee.envpipeline.model.Area;
 import com.thanmayee.envpipeline.pipeline.Pipeline;
@@ -27,19 +28,22 @@ public class WeatherIngestionService {
     private final Pipeline pipeline;
     private final ExecutorService ingestionExecutor;
     private final RetryExecutor retryExecutor;
+    private final LRUCache<String, List<Reading>> latestReadingCache;
 
     public WeatherIngestionService(
             List<DataSource> dataSources,
             ReadingRepository repository,
             Pipeline pipeline,
             @Qualifier("ingestionExecutor") ExecutorService ingestionExecutor,
-            RetryExecutor retryExecutor) {
+            RetryExecutor retryExecutor,
+            LRUCache<String, List<Reading>> latestReadingCache) {
 
         this.dataSources = dataSources;
         this.repository = repository;
         this.pipeline = pipeline;
         this.ingestionExecutor = ingestionExecutor;
         this.retryExecutor = retryExecutor;
+        this.latestReadingCache = latestReadingCache;
     }
 
     public int ingest() {
@@ -146,6 +150,12 @@ public class WeatherIngestionService {
                 repository.save(result);
                 inserted++;
             }
+        }
+
+        // Clear cached latest readings only when new data is inserted.
+        if (inserted > 0) {
+            latestReadingCache.clear();
+            logger.info("Latest readings cache cleared after ingestion.");
         }
 
         logger.info(

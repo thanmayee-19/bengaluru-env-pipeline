@@ -4,7 +4,7 @@ A Spring Boot service that fetches weather and air-quality readings for multiple
 
 ## Overview
 
-This project is built as a backend data pipeline and designed for interviews and portfolio demonstration.
+This project is built as a backend data pipeline and designed for learning and portfolio demonstration.
 
 It does the following:
 - pulls weather data from Open-Meteo for multiple Bengaluru locations
@@ -241,20 +241,6 @@ If this project were scaled further, the next changes would likely include:
 - richer alerts and persistence
 - deployment automation
 - better monitoring and observability
-
-## Benchmark Results
-
-This section should be filled with the real timings you measure on your machine.
-
-Example format:
-```text
-Sequential ingestion: 1800 ms
-Concurrent ingestion: 700 ms
-Latest without cache: 120 ms
-Latest with cache: 18 ms
-```
-
-Do not invent numbers. Use results collected from your local run.
 
 ## License
 

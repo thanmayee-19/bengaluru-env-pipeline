@@ -232,19 +232,6 @@ Run tests with:
 - database credentials come from environment variables
 - `.env` files and local secrets are ignored via `.gitignore`
 
-## Notes for Portfolio and Interview
-
-This project demonstrates:
-- Java backend fundamentals
-- SQL/PostgreSQL data storage
-- API design and REST JSON responses
-- Spring Boot dependency injection and configuration
-- pluggable design and clean separation of concerns
-- concurrency and retry handling
-- outbound HTTP ingestion from public APIs
-- caching and performance awareness
-- threshold alert logic and testing discipline
-
 ## Future Improvements
 
 If this project were scaled further, the next changes would likely include:
@@ -268,14 +255,6 @@ Latest with cache: 18 ms
 ```
 
 Do not invent numbers. Use results collected from your local run.
-
-## Repository and Git
-
-The repository is maintained with Git and pushed to GitHub. Each implemented milestone is kept as a separate commit so the project history is easy to understand and review.
-
-## Disclaimer
-
-This project uses public APIs and free data sources. It is designed for learning, portfolio use, and interview preparation rather than production-grade operational monitoring.
 
 ## License
 
